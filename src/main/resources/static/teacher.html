@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教师端 - 实时反馈</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-top: 10px; }
+        .confusion { color: red; }
+        .danmaku { color: blue; }
+    </style>
+</head>
+<body>
+<h2>教师端 - 课堂反馈看板</h2>
+<div>
+    <label>教室码：</label>
+    <input type="text" id="classroomCode" placeholder="例如 123456" />
+    <button onclick="connect()">连接课堂</button>
+</div>
+<div id="messages">等待连接...</div>
+
+<script>
+    var stompClient = null;
+
+    function connect() {
+        var code = document.getElementById('classroomCode').value.trim();
+        if (!code) {
+            alert('请输入教室码');
+            return;
+        }
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            // 订阅该教室的主题
+            stompClient.subscribe('/topic/classroom/' + code, function(message) {
+                var data = JSON.parse(message.body);
+                var msgDiv = document.getElementById('messages');
+                var type = data.type;
+                var content = data.content || (type === 1 ? '学生表示困惑' : '');
+                var time = new Date(data.timestamp).toLocaleTimeString();
+                var className = (type === 1) ? 'confusion' : 'danmaku';
+                var typeText = (type === 1) ? '困惑' : '弹幕';
+                msgDiv.innerHTML += '<div class="' + className + '">[' + time + '] ' + typeText + ': ' + content + '</div>';
+                msgDiv.scrollTop = msgDiv.scrollHeight;
+            });
+            document.getElementById('messages').innerHTML = '已连接到课堂：' + code;
+        });
+    }
+</script>
+</body>
+</html>

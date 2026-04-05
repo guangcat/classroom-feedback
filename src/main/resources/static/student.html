@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>学生端测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>学生端测试</h2>
+<div>
+    <label>教室码：</label>
+    <input type="text" id="classroomCode" placeholder="教室码" />
+    <label>openId：</label>
+    <input type="text" id="openId" placeholder="学生标识" value="student001" />
+</div>
+<button onclick="sendConfusion()">没听懂（困惑）</button>
+<div>
+    <input type="text" id="danmakuContent" placeholder="输入弹幕内容" />
+    <button onclick="sendDanmaku()">发送弹幕</button>
+</div>
+<div id="log"></div>
+
+<script>
+    var stompClient = null;
+    var classroomCode = '';
+    var openId = '';
+
+    function connect() {
+        classroomCode = document.getElementById('classroomCode').value.trim();
+        openId = document.getElementById('openId').value.trim();
+        if (!classroomCode || !openId) {
+            alert('请输入教室码和openId');
+            return;
+        }
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected');
+            // 可以订阅自己的反馈确认（可选）
+            document.getElementById('log').innerHTML = '已连接，可发送反馈';
+        });
+    }
+
+    function sendConfusion() {
+        if (!stompClient || !stompClient.connected) {
+            connect();
+            setTimeout(sendConfusion, 1000);
+            return;
+        }
+        var message = {
+            classroomCode: classroomCode,
+            openId: openId,
+            type: 1,
+            content: ''
+        };
+        stompClient.send("/app/feedback", {}, JSON.stringify(message));
+        document.getElementById('log').innerHTML = '已发送困惑反馈';
+    }
+
+    function sendDanmaku() {
+        var content = document.getElementById('danmakuContent').value;
+        if (!content) return;
+        if (!stompClient || !stompClient.connected) {
+            connect();
+            setTimeout(sendDanmaku, 1000);
+            return;
+        }
+        var message = {
+            classroomCode: classroomCode,
+            openId: openId,
+            type: 2,
+            content: content
+        };
+        stompClient.send("/app/feedback", {}, JSON.stringify(message));
+        document.getElementById('log').innerHTML = '已发送弹幕';
+        document.getElementById('danmakuContent').value = '';
+    }
+</script>
+</body>
+</html>
