@@ -7,39 +7,461 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        body { background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; min-height:100vh; padding:20px; display:flex; align-items:center; justify-content:center; }
-        .card { max-width:500px; width:100%; background:rgba(255,255,255,0.95); backdrop-filter:blur(2px); border-radius:48px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden; }
-        .header { background:white; padding:32px 24px 24px; text-align:center; border-bottom:1px solid #f0f0f0; }
-        .header h1 { font-size:28px; font-weight:700; background:linear-gradient(135deg,#667eea,#764ba2); background-clip:text; -webkit-background-clip:text; color:transparent; margin-bottom:8px; }
-        .conn-status { font-size:14px; margin-top:6px; margin-bottom:8px; font-weight:500; color:#888; }
-        .header p { color:#888; font-size:14px; }
-        .form-group { padding:24px; }
-        .input-field { background:#f5f7fb; border-radius:32px; padding:4px 20px; margin-bottom:20px; display:flex; align-items:center; border:1px solid #e2e8f0; transition:all 0.2s; }
-        .input-field:focus-within { border-color:#667eea; background:white; }
-        .input-field label { font-size:14px; color:#667eea; font-weight:500; width:70px; }
-        .input-field input { flex:1; border:none; background:transparent; padding:16px 0; font-size:16px; outline:none; }
-        .btn { width:100%; padding:16px; border-radius:40px; border:none; font-size:18px; font-weight:600; transition:0.2s; margin-bottom:16px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
-        .btn:active { transform:scale(0.97); }
-        .connect-btn { background:#667eea; color:white; }
-        .connect-btn:active { background:#5a67d8; }
-        .confusion-btn { background:#ff6b6b; color:white; box-shadow:0 4px 12px rgba(255,107,107,0.3); }
-        .confusion-btn:active { background:#ff5252; }
-        .confusion-btn.disabled, .send-btn.disabled { opacity:0.6; pointer-events:none; }
-        .danmaku-area { display:flex; gap:12px; margin-top:8px; }
-        .danmaku-input { flex:1; background:#f5f7fb; border:1px solid #e2e8f0; border-radius:40px; padding:14px 20px; font-size:16px; outline:none; }
-        .danmaku-input:focus { border-color:#667eea; }
-        .send-btn { background:#4c6ef5; padding:0 24px; border-radius:40px; border:none; color:white; font-weight:600; cursor:pointer; }
-        .log-area { background:#f8f9fc; margin:0 24px 24px; padding:16px; border-radius:28px; font-size:13px; color:#555; text-align:center; border:1px solid #eef2f6; }
-        .footer { text-align:center; padding:20px; font-size:12px; color:#aaa; border-top:1px solid #f0f0f0; }
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000; }
-        .modal-content { background:white; border-radius:32px; width:85%; max-width:320px; padding:24px; text-align:center; }
-        .modal-content h3 { margin-bottom:16px; font-size:20px; }
-        .modal-content input { width:100%; padding:12px; border-radius:40px; border:1px solid #ddd; margin-bottom:20px; font-size:16px; }
-        .modal-buttons { display:flex; gap:12px; }
-        .modal-buttons button { flex:1; padding:12px; border-radius:40px; border:none; font-weight:600; cursor:pointer; }
-        .modal-confirm { background:#667eea; color:white; }
-        .modal-cancel { background:#f0f0f0; color:#333; }
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --success-color: #4cc9f0;
+            --warning-color: #fca311;
+            --danger-color: #ef476f;
+            --text-color: #2b2d42;
+            --text-light: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: rgba(255, 255, 255, 0.95);
+            --border-radius: 16px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-background);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: white;
+            padding: 40px 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            animation: gradientSlide 3s infinite linear;
+        }
+
+        @keyframes gradientSlide {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .conn-status {
+            font-size: 14px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            padding: 32px 24px;
+        }
+
+        .input-field {
+            background: #f5f7fb;
+            border-radius: 32px;
+            padding: 4px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            border: 2px solid #e2e8f0;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-field:focus-within {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .input-field label {
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 600;
+            width: 80px;
+            z-index: 1;
+        }
+
+        .input-field input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 18px 0;
+            font-size: 16px;
+            outline: none;
+            z-index: 1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 32px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .connect-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .connect-btn:hover {
+            background: var(--secondary-color);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+        }
+
+        .confusion-btn {
+            background: var(--danger-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 71, 111, 0.3);
+        }
+
+        .confusion-btn:hover {
+            background: #d9375b;
+            box-shadow: 0 6px 16px rgba(239, 71, 111, 0.4);
+        }
+
+        .confusion-btn:disabled, .send-btn:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            transform: none;
+        }
+
+        .danmaku-area {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .danmaku-input {
+            flex: 1;
+            background: #f5f7fb;
+            border: 2px solid #e2e8f0;
+            border-radius: 32px;
+            padding: 16px 24px;
+            font-size: 16px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .danmaku-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .send-btn {
+            background: var(--success-color);
+            padding: 0 32px;
+            border-radius: 32px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
+        }
+
+        .send-btn:hover {
+            background: #3db6e0;
+            box-shadow: 0 6px 16px rgba(76, 201, 240, 0.4);
+        }
+
+        .log-area {
+            background: #f8f9fc;
+            margin: 0 24px 24px;
+            padding: 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            text-align: center;
+            border: 1px solid #eef2f6;
+            transition: var(--transition);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 12px;
+            color: var(--text-light);
+            border-top: 1px solid #f0f0f0;
+            background: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 85%;
+            max-width: 360px;
+            padding: 32px;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h3 {
+            margin-bottom: 24px;
+            font-size: 22px;
+            color: var(--text-color);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 32px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 24px;
+            font-size: 16px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .modal-content input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 32px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-confirm {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-confirm:hover {
+            background: var(--secondary-color);
+        }
+
+        .modal-cancel {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .modal-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .card {
+                border-radius: 24px;
+            }
+
+            .header {
+                padding: 32px 24px 20px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .form-group {
+                padding: 24px 20px;
+            }
+
+            .input-field {
+                padding: 4px 20px;
+                margin-bottom: 20px;
+            }
+
+            .btn {
+                padding: 16px;
+                font-size: 16px;
+                margin-bottom: 16px;
+            }
+
+            .danmaku-area {
+                gap: 12px;
+            }
+
+            .danmaku-input {
+                padding: 14px 20px;
+                font-size: 14px;
+            }
+
+            .send-btn {
+                padding: 0 24px;
+            }
+
+            .log-area {
+                padding: 16px;
+                font-size: 13px;
+            }
+
+            .modal-content {
+                padding: 24px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
@@ -50,25 +472,87 @@
         <p>随时提问 · 让老师听见你的声音</p>
     </div>
     <div class="form-group">
-        <div class="input-field"><label>🏫 教室码</label><input type="text" id="classroomCode" placeholder="6位数字" maxlength="6" autocomplete="off"></div>
-        <div class="input-field"><label>👤 昵称</label><input type="text" id="nickname" placeholder="给自己起个名" value="同学"></div>
+        <div class="input-field">
+            <label>🏫 教室码</label>
+            <input type="text" id="classroomCode" placeholder="6位数字" maxlength="6" autocomplete="off">
+        </div>
+        <div class="input-field">
+            <label>👤 昵称</label>
+            <input type="text" id="nickname" placeholder="给自己起个名" value="同学">
+        </div>
         <button class="btn connect-btn" id="connectBtn">🔌 连接教室</button>
         <button class="btn confusion-btn" id="confusionBtn" disabled>😕 没听懂 · 举手</button>
-        <div class="danmaku-area"><input type="text" id="danmakuContent" class="danmaku-input" placeholder="💬 发送弹幕..." disabled><button class="send-btn" id="sendDanmakuBtn" disabled>发送</button></div>
+        <div class="danmaku-area">
+            <input type="text" id="danmakuContent" class="danmaku-input" placeholder="💬 发送弹幕..." disabled>
+            <button class="send-btn" id="sendDanmakuBtn" disabled>发送</button>
+        </div>
     </div>
     <div class="log-area" id="logArea">请输入教室码和昵称，点击连接</div>
     <div class="footer">匿名反馈 | 实时同步</div>
 </div>
-<div id="confusionModal" class="modal"><div class="modal-content"><h3>🤔 你的困惑</h3><input type="text" id="confusionInput" placeholder="选填：简单描述你的问题" autocomplete="off"><div class="modal-buttons"><button class="modal-cancel" id="modalCancel">取消</button><button class="modal-confirm" id="modalConfirm">发送困惑</button></div></div></div>
+<div id="confusionModal" class="modal">
+    <div class="modal-content">
+        <h3>🤔 你的困惑</h3>
+        <input type="text" id="confusionInput" placeholder="选填：简单描述你的问题" autocomplete="off">
+        <div class="modal-buttons">
+            <button class="modal-cancel" id="modalCancel">取消</button>
+            <button class="modal-confirm" id="modalConfirm">发送困惑</button>
+        </div>
+    </div>
+</div>
 <script>
-    const classroomCodeInput = document.getElementById('classroomCode'), nicknameInput = document.getElementById('nickname'), connectBtn = document.getElementById('connectBtn'), confusionBtn = document.getElementById('confusionBtn'), danmakuContentInput = document.getElementById('danmakuContent'), sendDanmakuBtn = document.getElementById('sendDanmakuBtn'), connStatusText = document.getElementById('connStatusText'), logArea = document.getElementById('logArea'), confusionModal = document.getElementById('confusionModal'), confusionInput = document.getElementById('confusionInput'), modalCancel = document.getElementById('modalCancel'), modalConfirm = document.getElementById('modalConfirm');
+    const classroomCodeInput = document.getElementById('classroomCode'),
+          nicknameInput = document.getElementById('nickname'),
+          connectBtn = document.getElementById('connectBtn'),
+          confusionBtn = document.getElementById('confusionBtn'),
+          danmakuContentInput = document.getElementById('danmakuContent'),
+          sendDanmakuBtn = document.getElementById('sendDanmakuBtn'),
+          connStatusText = document.getElementById('connStatusText'),
+          logArea = document.getElementById('logArea'),
+          confusionModal = document.getElementById('confusionModal'),
+          confusionInput = document.getElementById('confusionInput'),
+          modalCancel = document.getElementById('modalCancel'),
+          modalConfirm = document.getElementById('modalConfirm');
+
     let stompClient = null, currentClassroomCode = '', currentNickname = '';
-    function getQueryParam(name) { const urlParams = new URLSearchParams(window.location.search); return urlParams.get(name); }
-    function updateLog(msg, isError=false) { logArea.innerHTML = msg; logArea.style.color = isError ? '#e53e3e' : '#555'; setTimeout(()=>{ if(logArea.innerHTML===msg) logArea.style.color='#555'; },3000); }
-    function setStatus(connected) {
-        if(connected) { connStatusText.innerHTML='🟢 已连接'; connStatusText.style.color='#2e7d32'; confusionBtn.disabled=false; danmakuContentInput.disabled=false; sendDanmakuBtn.disabled=false; updateLog('✅ 已连接课堂，可以发送反馈'); }
-        else { connStatusText.innerHTML='⚪ 未连接'; connStatusText.style.color='#888'; confusionBtn.disabled=true; danmakuContentInput.disabled=true; sendDanmakuBtn.disabled=true; updateLog('⚠️ 未连接，请点击"连接教室"', true); }
+
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
     }
+
+    function updateLog(msg, isError = false) {
+        logArea.innerHTML = msg;
+        logArea.style.color = isError ? '#e53e3e' : '#2b2d42';
+        logArea.style.backgroundColor = isError ? '#fff5f5' : '#f8f9fc';
+        setTimeout(() => {
+            if (logArea.innerHTML === msg) {
+                logArea.style.color = '#2b2d42';
+                logArea.style.backgroundColor = '#f8f9fc';
+            }
+        }, 3000);
+    }
+
+    function setStatus(connected) {
+        if (connected) {
+            connStatusText.innerHTML = '🟢 已连接';
+            connStatusText.style.color = '#4cc9f0';
+            connStatusText.style.fontWeight = '600';
+            confusionBtn.disabled = false;
+            danmakuContentInput.disabled = false;
+            sendDanmakuBtn.disabled = false;
+            updateLog('✅ 已连接课堂，可以发送反馈');
+        } else {
+            connStatusText.innerHTML = '⚪ 未连接';
+            connStatusText.style.color = '#6c757d';
+            connStatusText.style.fontWeight = '500';
+            confusionBtn.disabled = true;
+            danmakuContentInput.disabled = true;
+            sendDanmakuBtn.disabled = true;
+            updateLog('⚠️ 未连接，请点击"连接教室"', true);
+        }
+    }
+
     async function validateClassroomCode(code) {
         const baseUrl = window.location.origin;
         const url = `${baseUrl}/api/classroom/${code}`;
@@ -92,48 +576,154 @@
             throw new Error(err.message || '网络错误，无法验证教室码');
         }
     }
+
     async function connect() {
-        const code = classroomCodeInput.value.trim(), nickname = nicknameInput.value.trim() || '同学';
-        if (!code) { updateLog('请输入教室码', true); return; }
-        updateLog('正在验证教室码...');
+        const code = classroomCodeInput.value.trim(),
+              nickname = nicknameInput.value.trim() || '同学';
+
+        if (!code) {
+            updateLog('请输入教室码', true);
+            return;
+        }
+
+        if (code.length !== 6 || !/^\d+$/.test(code)) {
+            updateLog('教室码必须是6位数字', true);
+            return;
+        }
+
+        updateLog('<div class="loading"></div> 正在验证教室码...');
         connectBtn.disabled = true;
-        try { await validateClassroomCode(code); } catch (err) { updateLog(`❌ ${err.message}`, true); connectBtn.disabled = false; return; }
+        connectBtn.innerHTML = '<div class="loading"></div> 连接中...';
+
+        try {
+            await validateClassroomCode(code);
+        } catch (err) {
+            updateLog(`❌ ${err.message}`, true);
+            connectBtn.disabled = false;
+            connectBtn.innerHTML = '🔌 连接教室';
+            return;
+        }
+
         connectBtn.disabled = false;
-        currentClassroomCode = code; currentNickname = nickname;
-        if (stompClient && stompClient.connected) stompClient.disconnect();
+        connectBtn.innerHTML = '🔌 连接教室';
+        currentClassroomCode = code;
+        currentNickname = nickname;
+
+        if (stompClient && stompClient.connected) {
+            stompClient.disconnect();
+        }
+
+        updateLog('<div class="loading"></div> 正在建立连接...');
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame) { console.log('Connected'); setStatus(true); }, function(error) { console.error(error); setStatus(false); });
+
+        stompClient.connect({}, function(frame) {
+            console.log('Connected');
+            setStatus(true);
+        }, function(error) {
+            console.error(error);
+            setStatus(false);
+            updateLog('❌ 连接失败，请检查网络', true);
+        });
     }
+
     function showConfusionModal() {
-        if (!stompClient || !stompClient.connected) { updateLog('未连接，请先连接教室', true); return; }
-        confusionInput.value = ''; confusionModal.style.display = 'flex';
+        if (!stompClient || !stompClient.connected) {
+            updateLog('未连接，请先连接教室', true);
+            return;
+        }
+        confusionInput.value = '';
+        confusionModal.style.display = 'flex';
+        // 自动聚焦输入框
+        setTimeout(() => {
+            confusionInput.focus();
+        }, 100);
     }
+
     function sendConfusion(description) {
-        const message = { classroomCode: currentClassroomCode, openId: currentNickname + '_' + Date.now(), type: 1, content: description || '' };
+        const message = {
+            classroomCode: currentClassroomCode,
+            openId: currentNickname + '_' + Date.now(),
+            type: 1,
+            content: description || ''
+        };
         stompClient.send("/app/feedback", {}, JSON.stringify(message));
         updateLog(description ? `🙋 困惑已发送: "${description}"` : '🙋 困惑反馈已发送');
         if (navigator.vibrate) navigator.vibrate(50);
     }
+
     function sendDanmaku() {
         const content = danmakuContentInput.value.trim();
-        if (!content) { updateLog('弹幕内容不能为空', true); return; }
-        if (!stompClient || !stompClient.connected) { updateLog('未连接，请先连接教室', true); return; }
-        const message = { classroomCode: currentClassroomCode, openId: currentNickname + '_' + Date.now(), type: 2, content: content };
+        if (!content) {
+            updateLog('弹幕内容不能为空', true);
+            return;
+        }
+        if (content.length > 50) {
+            updateLog('弹幕内容不能超过50字', true);
+            return;
+        }
+        if (!stompClient || !stompClient.connected) {
+            updateLog('未连接，请先连接教室', true);
+            return;
+        }
+        const message = {
+            classroomCode: currentClassroomCode,
+            openId: currentNickname + '_' + Date.now(),
+            type: 2,
+            content: content
+        };
         stompClient.send("/app/feedback", {}, JSON.stringify(message));
         updateLog(`💬 弹幕已发送: "${content}"`);
         danmakuContentInput.value = '';
         if (navigator.vibrate) navigator.vibrate(20);
     }
+
     connectBtn.addEventListener('click', connect);
     confusionBtn.addEventListener('click', showConfusionModal);
     sendDanmakuBtn.addEventListener('click', sendDanmaku);
-    danmakuContentInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendDanmaku(); });
-    modalCancel.addEventListener('click', () => { confusionModal.style.display = 'none'; });
-    modalConfirm.addEventListener('click', () => { const desc = confusionInput.value.trim(); sendConfusion(desc); confusionModal.style.display = 'none'; });
-    confusionModal.addEventListener('click', (e) => { if (e.target === confusionModal) confusionModal.style.display = 'none'; });
+
+    danmakuContentInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendDanmaku();
+    });
+
+    modalCancel.addEventListener('click', () => {
+        confusionModal.style.display = 'none';
+    });
+
+    modalConfirm.addEventListener('click', () => {
+        const desc = confusionInput.value.trim();
+        sendConfusion(desc);
+        confusionModal.style.display = 'none';
+    });
+
+    confusionModal.addEventListener('click', (e) => {
+        if (e.target === confusionModal) confusionModal.style.display = 'none';
+    });
+
+    // 自动填充教室码
     const codeFromUrl = getQueryParam('classroomCode');
-    if (codeFromUrl) { classroomCodeInput.value = codeFromUrl; updateLog('教室码已自动填入，请点击“连接教室”'); }
+    if (codeFromUrl) {
+        classroomCodeInput.value = codeFromUrl;
+        updateLog('教室码已自动填入，请点击“连接教室”');
+    }
+
+    // 教室码输入限制
+    classroomCodeInput.addEventListener('input', (e) => {
+        // 只允许输入数字
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        // 限制长度为6位
+        if (e.target.value.length > 6) {
+            e.target.value = e.target.value.slice(0, 6);
+        }
+    });
+
+    // 昵称输入限制
+    nicknameInput.addEventListener('input', (e) => {
+        // 限制长度为20位
+        if (e.target.value.length > 20) {
+            e.target.value = e.target.value.slice(0, 20);
+        }
+    });
 </script>
 </body>
 </html>

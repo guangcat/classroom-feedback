@@ -8,34 +8,571 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        /* 样式不变，省略... 请复制之前的完整样式 */
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Segoe UI','Microsoft YaHei',sans-serif; background:#f0f2f5; padding:20px; }
-        .container { max-width:1400px; margin:0 auto; }
-        .header { background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:white; padding:20px 30px; border-radius:24px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; }
-        .header h1 { font-size:24px; display:flex; align-items:center; gap:12px; }
-        .classroom-card { background:rgba(255,255,255,0.15); padding:10px 20px; border-radius:60px; display:flex; align-items:center; gap:15px; backdrop-filter:blur(4px); }
-        .classroom-code { font-size:28px; font-weight:bold; letter-spacing:4px; font-family:monospace; }
-        .copy-btn { background:white; border:none; padding:6px 14px; border-radius:30px; color:#1e3c72; font-weight:bold; cursor:pointer; transition:0.2s; }
-        .copy-btn:hover { background:#e0e7ff; }
-        .create-btn { background:#ffc107; color:#1e3c72; border:none; padding:12px 28px; border-radius:40px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.2s; }
-        .create-btn:hover { background:#ffcd38; }
-        .status { background:#27ae60; padding:6px 16px; border-radius:40px; font-size:14px; font-weight:normal; }
-        .dashboard { display:grid; grid-template-columns:1fr 340px; gap:20px; }
-        .chart-card { background:white; border-radius:24px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-        .chart-card h3 { font-size:18px; color:#333; margin-bottom:16px; border-left:4px solid #2a5298; padding-left:12px; }
-        #heatmap { width:100%; height:400px; }
-        .stats { display:flex; justify-content:space-between; margin-top:20px; background:#f8f9fc; padding:16px; border-radius:20px; }
-        .stats-item { text-align:center; }
-        .stats-number { font-size:32px; font-weight:bold; color:#2a5298; }
-        .danmaku-card { background:white; border-radius:24px; padding:20px; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-        .danmaku-list { flex:1; height:500px; overflow-y:auto; border:1px solid #eee; border-radius:20px; padding:12px; background:#fafbfd; }
-        .danmaku-item { background:white; padding:12px 16px; margin-bottom:10px; border-radius:30px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #2a5298; }
-        .danmaku-item.confusion { border-left-color:#ff6b6b; background:#fff5f5; }
-        .danmaku-time { font-size:11px; color:#999; margin-right:12px; }
-        .danmaku-content { font-size:14px; color:#333; }
-        .footer { text-align:center; margin-top:20px; color:#aaa; font-size:12px; }
-        @media (max-width:768px){ .dashboard{grid-template-columns:1fr;} .header{flex-direction:column; align-items:flex-start;} }
+        :root {
+            --primary-color: #3a0ca3;
+            --secondary-color: #4361ee;
+            --accent-color: #f72585;
+            --success-color: #4cc9f0;
+            --warning-color: #fca311;
+            --danger-color: #ef476f;
+            --text-color: #2b2d42;
+            --text-light: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: white;
+            --border-radius: 16px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 24px 32px;
+            border-radius: 32px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 700;
+        }
+
+        .classroom-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 24px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: var(--transition);
+        }
+
+        .classroom-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .classroom-code {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 6px;
+            font-family: monospace;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .copy-btn {
+            background: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: var(--primary-color);
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .copy-btn:hover {
+            background: #e0e7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .create-btn {
+            background: var(--warning-color);
+            color: var(--text-color);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(252, 163, 17, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .create-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .create-btn:hover::before {
+            left: 100%;
+        }
+
+        .create-btn:hover {
+            background: #ffb74d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(252, 163, 17, 0.4);
+        }
+
+        .create-btn:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            background: var(--success-color);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(76, 201, 240, 0.3);
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+        }
+
+        .danmaku-section {
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: var(--card-background);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            animation: cardSlideIn 0.5s ease-out 0.2s both;
+        }
+
+        .danmaku-card {
+            background: var(--card-background);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            animation: cardSlideIn 0.5s ease-out 0.3s both;
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-card h3,
+        .danmaku-card h3 {
+            font-size: 20px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 16px;
+            font-weight: 600;
+        }
+
+        #heatmap {
+            width: 100%;
+            height: 450px;
+        }
+
+        #interactionChart {
+            width: 100%;
+            height: 450px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            background: #f8f9fc;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #eef2f6;
+        }
+
+        .stats-item {
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stats-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .danmaku-container {
+            height: 400px;
+            border: 1px solid #eef2f6;
+            border-radius: 20px;
+            background: #fafbfd;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 分割线样式 */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            margin: 12px 0;
+            position: relative;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .divider:hover {
+            opacity: 0.8;
+        }
+
+        .divider::after {
+            content: '⋮⋮';
+            position: absolute;
+            right: 10px;
+            top: -8px;
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: move;
+        }
+
+        .divider-label {
+            position: absolute;
+            left: 10px;
+            top: -12px;
+            background: white;
+            padding: 0 8px;
+            font-size: 12px;
+            color: var(--primary-color);
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .danmaku-header {
+            padding: 12px 16px;
+            background: #f0f2f5;
+            border-bottom: 1px solid #eef2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* 悬浮跳转按钮 */
+        .floating-jump-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .floating-jump-btn:hover {
+            transform: scale(1.1);
+            background: var(--secondary-color);
+        }
+
+        /* 消息提示框 */
+        .message-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-left: 4px solid var(--primary-color);
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 300px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification-content {
+            font-size: 14px;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .danmaku-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .danmaku-toggle:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .danmaku-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            transition: flex 0.3s ease;
+        }
+
+
+
+        /* 优化滚动体验 */
+        .danmaku-list {
+            scroll-behavior: smooth;
+        }
+
+        /* 消息数量限制 */
+        .danmaku-item {
+            max-height: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .danmaku-item {
+            background: white;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            border-radius: 30px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--secondary-color);
+            transition: var(--transition);
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .danmaku-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .danmaku-item.confusion {
+            border-left-color: var(--danger-color);
+            background: #fff5f5;
+        }
+
+        .danmaku-item.confusion:hover {
+            box-shadow: 0 4px 12px rgba(239, 71, 111, 0.1);
+        }
+
+        .danmaku-time {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-right: 12px;
+            font-weight: 500;
+        }
+
+        .danmaku-content {
+            font-size: 14px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-light);
+            font-size: 12px;
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 滚动条样式 */
+        .danmaku-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .danmaku-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .danmaku-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .danmaku-list::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .danmaku-list {
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px 24px;
+            }
+
+            .classroom-code {
+                font-size: 24px;
+                letter-spacing: 4px;
+            }
+
+            .chart-card,
+            .danmaku-card {
+                padding: 20px;
+            }
+
+            #heatmap {
+                height: 350px;
+            }
+
+            #interactionChart {
+                height: 350px;
+            }
+
+            .stats {
+                padding: 16px;
+            }
+
+            .stats-number {
+                font-size: 28px;
+            }
+        }
+
+        /* 消息类型图标 */
+        .message-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -46,110 +583,640 @@
         <div id="statusBadge" class="status">⚪ 未连接</div>
     </div>
     <div class="dashboard">
-        <div class="chart-card">
-            <h3>🔥 困惑热力图（按分钟聚合）</h3>
-            <div id="heatmap"></div>
-            <div class="stats">
-                <div class="stats-item"><div class="stats-number" id="totalConfusion">0</div><div>累计困惑</div></div>
-                <div class="stats-item"><div class="stats-number" id="activeStudents">0</div><div>参与学生</div></div>
+        <div class="main-content">
+            <div class="chart-card">
+                <h3>🔥 困惑热力图</h3>
+                <div id="heatmap"></div>
+                <div class="stats">
+                    <div class="stats-item">
+                        <div class="stats-number" id="totalConfusion">0</div>
+                        <div class="stats-label">累计困惑</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-number" id="activeStudents">0</div>
+                        <div class="stats-label">参与学生</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-number" id="totalDanmaku">0</div>
+                        <div class="stats-label">弹幕数量</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>📊 互动分析</h3>
+                <div id="interactionChart"></div>
             </div>
         </div>
-        <div class="danmaku-card">
-            <h3>💬 实时消息（困惑+弹幕）</h3>
-            <div id="danmakuList" class="danmaku-list"><div style="color:#aaa; text-align:center; padding:20px;">暂无消息，等待学生互动...</div></div>
+        <div class="danmaku-section">
+            <div class="danmaku-card">
+                <h3>💬 实时消息</h3>
+                <div class="danmaku-container">
+                    <div class="danmaku-header">
+                        <span>消息列表</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="danmaku-toggle" id="addDividerBtn">添加分割线</button>
+                        </div>
+                    </div>
+                    <div id="danmakuList" class="danmaku-list">
+                        <div style="color: var(--text-light); text-align: center; padding: 40px; font-size: 14px;">
+                            暂无消息，等待学生互动...
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="footer">教师端 | 鼠标悬停图表查看详细时间 | 困惑消息显示为红色边框</div>
+    <div class="footer">
+        教师端 | 鼠标悬停图表查看详细时间 | 困惑消息显示为红色边框
+    </div>
 </div>
 <script>
     const classroomPanel = document.getElementById('classroomPanel');
     const statusBadge = document.getElementById('statusBadge');
     const totalConfusionSpan = document.getElementById('totalConfusion');
     const activeStudentsSpan = document.getElementById('activeStudents');
+    const totalDanmakuSpan = document.getElementById('totalDanmaku');
     const danmakuListDiv = document.getElementById('danmakuList');
-    let chart = null, stompClient = null, currentClassroomCode = null;
-    let confusionMap = new Map(), confusionPoints = [], totalConfusionCount = 0, danmakuHistory = [], studentSet = new Set();
+    let chart = null, interactionChart = null, stompClient = null, currentClassroomCode = null;
+    let confusionMap = new Map(), confusionPoints = [], totalConfusionCount = 0, totalDanmakuCount = 0, danmakuHistory = [], studentSet = new Set();
+    let dividers = []; // 存储分割线数据
+    let interactionData = { confusion: [], danmaku: [] }; // 互动数据
 
-    function getMinuteKey(timestamp) { const d = new Date(timestamp); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
-    function updateChart() { if(!chart) return; chart.setOption({ xAxis:{ data: confusionPoints.map(p=>p.timeStr) }, series:[{ data: confusionPoints.map(p=>p.count) }] }); }
+    function getMinuteKey(timestamp) {
+        const d = new Date(timestamp);
+        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    }
 
-    // 修改后的 addConfusionPoint：只有有描述时才显示在消息列表
+    function updateChart() {
+        if (!chart) return;
+        chart.setOption({
+            xAxis: {
+                data: confusionPoints.map(p => p.timeStr)
+            },
+            series: [{
+                data: confusionPoints.map(p => p.count)
+            }]
+        });
+    }
+
     function addConfusionPoint(timestamp, userId, content) {
         const minuteKey = getMinuteKey(timestamp);
-        if(confusionMap.has(minuteKey)) confusionMap.get(minuteKey).count++;
-        else confusionMap.set(minuteKey, { timeStr: minuteKey, count:1 });
-        confusionPoints = Array.from(confusionMap.values()).sort((a,b)=>a.timeStr.localeCompare(b.timeStr));
-        totalConfusionCount++; totalConfusionSpan.innerText = totalConfusionCount;
-        if(userId) studentSet.add(userId);
+        if (confusionMap.has(minuteKey)) {
+            confusionMap.get(minuteKey).count++;
+        } else {
+            confusionMap.set(minuteKey, { timeStr: minuteKey, count: 1 });
+        }
+        confusionPoints = Array.from(confusionMap.values()).sort((a, b) => a.timeStr.localeCompare(b.timeStr));
+        totalConfusionCount++;
+        totalConfusionSpan.innerText = totalConfusionCount;
+        if (userId) studentSet.add(userId);
         activeStudentsSpan.innerText = studentSet.size;
         updateChart();
+        updateConfusionChart();
 
         if (content && content.trim() !== '') {
             addMessageToList(`🤔 困惑：${content}`, timestamp, userId, 'confusion');
+        } else {
+            // 没有具体文字反馈的困惑状态，不显示在公共弹幕区域
         }
     }
 
     function addDanmaku(content, timestamp, userId) {
         addMessageToList(`💬 ${content}`, timestamp, userId, 'danmaku');
-        if(userId) studentSet.add(userId);
+        totalDanmakuCount++;
+        totalDanmakuSpan.innerText = totalDanmakuCount;
+        if (userId) studentSet.add(userId);
         activeStudentsSpan.innerText = studentSet.size;
+        updateConfusionChart();
     }
+
     function addMessageToList(displayContent, timestamp, userId, type) {
         const time = new Date(timestamp).toLocaleTimeString();
         danmakuHistory.unshift({ time, content: displayContent, type });
-        if(danmakuHistory.length > 30) danmakuHistory.pop();
+        // 限制显示的消息数量为20条，超出的部分通过滚动查看
+        const MAX_MESSAGES = 20;
+        if (danmakuHistory.length > MAX_MESSAGES) {
+            danmakuHistory.pop();
+        }
+        renderMessageList();
+        
+        // 显示消息提示框
+        showNotification(displayContent);
+    }
+
+    function renderMessageList() {
+        if (danmakuHistory.length === 0) {
+            danmakuListDiv.innerHTML = '<div style="color: var(--text-light); text-align: center; padding: 40px; font-size: 14px;">暂无消息，等待学生互动...</div>';
+            return;
+        }
+        
+        // 弹幕按时间倒序排列（最新的在前面）
+        const sortedMessages = [...danmakuHistory].sort((a, b) => new Date(b.time) - new Date(a.time));
+        
+        let html = '';
+        
+        // 按顺序渲染消息和分割线
+        sortedMessages.forEach((item, index) => {
+            // 检查是否有分割线绑定到当前消息，如果有则先渲染分割线（在弹幕之上）
+            dividers.forEach(divider => {
+                if (divider.bindToMessage && divider.bindToMessage.time === item.time && 
+                    divider.bindToMessage.content === item.content) {
+                    html += `<div class="divider" data-id="${divider.id}">
+                        <div class="divider-label">${divider.label}</div>
+                    </div>`;
+                }
+            });
+            
+            // 渲染消息
+            html += `<div class="danmaku-item ${item.type === 'confusion' ? 'confusion' : ''}" data-time="${item.time}" data-content="${escapeHtml(item.content)}">
+                <span class="danmaku-time">${item.time}</span>
+                <span class="danmaku-content">${escapeHtml(item.content)}</span>
+            </div>`;
+        });
+        
+        danmakuListDiv.innerHTML = html;
+        
+        // 初始化分割线拖拽功能
+        initDividerDrag();
+        
+        // 自动滚动到底部
+        danmakuListDiv.scrollTop = 0;
+    }
+
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'message-notification';
+        notification.innerHTML = `
+            <div class="notification-content">${message}</div>
+            <div class="notification-time">${new Date().toLocaleTimeString()}</div>
+        `;
+        document.body.appendChild(notification);
+        
+        // 3秒后自动移除
+        setTimeout(() => {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    function addDivider() {
+        const now = new Date();
+        
+        // 如果没有弹幕，不添加分割线
+        if (danmakuHistory.length === 0) {
+            alert('暂无弹幕，无法添加分割线');
+            return;
+        }
+        
+        // 获取最新的弹幕（按时间倒序排列后的第一条）
+        const sortedMessages = [...danmakuHistory].sort((a, b) => new Date(b.time) - new Date(a.time));
+        const latestMessage = sortedMessages[0];
+        
+        // 检查是否已经有分割线绑定到这条弹幕
+        const existingDivider = dividers.find(d => 
+            d.bindToMessage && 
+            d.bindToMessage.time === latestMessage.time && 
+            d.bindToMessage.content === latestMessage.content
+        );
+        
+        if (existingDivider) {
+            alert('该弹幕已存在分割线');
+            return;
+        }
+        
+        const divider = {
+            id: 'divider_' + Date.now(),
+            timestamp: now.toISOString(),
+            time: now.toLocaleTimeString(),
+            label: `分割线`,
+            bindToMessage: {
+                time: latestMessage.time,
+                content: latestMessage.content
+            }
+        };
+        dividers.push(divider);
         renderMessageList();
     }
-    function renderMessageList() {
-        if(danmakuHistory.length===0) { danmakuListDiv.innerHTML='<div style="color:#aaa; text-align:center; padding:20px;">暂无消息，等待学生互动...</div>'; return; }
-        let html = '';
-        danmakuHistory.forEach(m=>{ html+=`<div class="danmaku-item ${m.type==='confusion'?'confusion':''}"><span class="danmaku-time">${m.time}</span><span class="danmaku-content">${escapeHtml(m.content)}</span></div>`; });
-        danmakuListDiv.innerHTML = html;
+
+    function addBatchDivider() {
+        // 移除自动添加批次分割线的功能
+        // 只保留手动添加的分割线
     }
-    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-    function resetData() { confusionMap.clear(); confusionPoints=[]; totalConfusionCount=0; studentSet.clear(); danmakuHistory=[]; totalConfusionSpan.innerText='0'; activeStudentsSpan.innerText='0'; renderMessageList(); if(chart) chart.setOption({ xAxis:{ data:[] }, series:[{ data:[] }] }); }
+
+    function initDividerDrag() {
+        const dividerElements = document.querySelectorAll('.divider');
+        dividerElements.forEach(divider => {
+            let isDragging = false;
+            let startY;
+            let currentBindMessage = null;
+            
+            divider.addEventListener('mousedown', (e) => {
+                if (e.target === divider || e.target.classList.contains('divider-label')) {
+                    isDragging = true;
+                    startY = e.clientY;
+                    const dividerId = divider.dataset.id;
+                    const dividerObj = dividers.find(d => d.id === dividerId);
+                    currentBindMessage = dividerObj ? dividerObj.bindToMessage : null;
+                    divider.style.cursor = 'grabbing';
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const currentY = e.clientY;
+                const deltaY = currentY - startY;
+                
+                // 获取当前绑定的消息在排序后的列表中的索引
+                const sortedMessages = [...danmakuHistory].sort((a, b) => new Date(b.time) - new Date(a.time));
+                let currentIndex = sortedMessages.findIndex(m => 
+                    m.time === currentBindMessage.time && m.content === currentBindMessage.content
+                );
+                
+                if (currentIndex === -1) return;
+                
+                // 计算新的绑定位置
+                let newIndex = currentIndex;
+                
+                if (deltaY > 40 && currentIndex < sortedMessages.length - 1) {
+                    newIndex = currentIndex + 1;
+                } else if (deltaY < -40 && currentIndex > 0) {
+                    newIndex = currentIndex - 1;
+                }
+                
+                if (newIndex !== currentIndex) {
+                    const dividerId = divider.dataset.id;
+                    const dividerObj = dividers.find(d => d.id === dividerId);
+                    
+                    if (dividerObj) {
+                        // 更新分割线绑定的消息
+                        const newMessage = sortedMessages[newIndex];
+                        dividerObj.bindToMessage = {
+                            time: newMessage.time,
+                            content: newMessage.content
+                        };
+                        currentBindMessage = dividerObj.bindToMessage;
+                        startY = currentY;
+                        renderMessageList();
+                    }
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                divider.style.cursor = 'pointer';
+            });
+        });
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/[&<>]/g, function (m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function resetData() {
+        confusionMap.clear();
+        confusionPoints = [];
+        totalConfusionCount = 0;
+        totalDanmakuCount = 0;
+        studentSet.clear();
+        danmakuHistory = [];
+        dividers = []; // 重置分割线
+        interactionData = { confusion: [], danmaku: [] }; // 重置互动数据
+        totalConfusionSpan.innerText = '0';
+        totalDanmakuSpan.innerText = '0';
+        activeStudentsSpan.innerText = '0';
+        renderMessageList();
+        if (chart) {
+            chart.setOption({
+                xAxis: { data: [] },
+                series: [{ data: [] }]
+            });
+        }
+        if (interactionChart) {
+            interactionChart.setOption({
+                xAxis: { data: [] },
+                series: [
+                    { data: [] },
+                    { data: [] }
+                ]
+            });
+        }
+    }
+
     function initChart() {
         chart = echarts.init(document.getElementById('heatmap'));
-        chart.setOption({ tooltip:{ trigger:'axis', axisPointer:{ type:'shadow' }, formatter:params=>params?`时间: ${params[0].axisValue}<br/>困惑次数: ${params[0].value}`:'' }, xAxis:{ type:'category', name:'时间 (分钟)', data:[], axisLabel:{ rotate:30, interval:0 } }, yAxis:{ type:'value', name:'困惑次数' }, series:[{ name:'困惑次数', type:'line', smooth:true, symbol:'circle', symbolSize:8, itemStyle:{ color:'#e67e22', borderColor:'#fff', borderWidth:2 }, areaStyle:{ opacity:0.3, color:'#f39c12' }, data:[] }], grid:{ containLabel:true, left:50, right:30, top:30, bottom:30 } });
+        chart.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: params => params ? `时间: ${params[0].axisValue}<br/>困惑次数: ${params[0].value}` : ''
+            },
+            xAxis: {
+                type: 'category',
+                name: '时间 (分钟)',
+                data: [],
+                axisLabel: {
+                    rotate: 45,
+                    interval: 0,
+                    fontSize: 12
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '困惑次数',
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            series: [{
+                name: '困惑次数',
+                type: 'line',
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 8,
+                itemStyle: {
+                    color: '#f72585',
+                    borderColor: '#fff',
+                    borderWidth: 2
+                },
+                areaStyle: {
+                    opacity: 0.3,
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(247, 37, 133, 0.6)' },
+                        { offset: 1, color: 'rgba(247, 37, 133, 0.1)' }
+                    ])
+                },
+                data: []
+            }],
+            grid: {
+                containLabel: true,
+                left: 60,
+                right: 40,
+                top: 40,
+                bottom: 80
+            },
+            animation: true,
+            animationDuration: 1000
+        });
     }
+
+    function initInteractionChart() {
+        interactionChart = echarts.init(document.getElementById('interactionChart'));
+        interactionChart.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' }
+            },
+            legend: {
+                data: ['困惑', '弹幕'],
+                top: 10
+            },
+            xAxis: {
+                type: 'category',
+                name: '时间 (分钟)',
+                data: [],
+                axisLabel: {
+                    rotate: 45,
+                    interval: 0,
+                    fontSize: 12
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '数量',
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            series: [
+                {
+                    name: '困惑',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [],
+                    itemStyle: {
+                        color: '#f72585'
+                    }
+                },
+                {
+                    name: '弹幕',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [],
+                    itemStyle: {
+                        color: '#4361ee'
+                    }
+                }
+            ],
+            grid: {
+                containLabel: true,
+                left: 60,
+                right: 40,
+                top: 60,
+                bottom: 80
+            },
+            animation: true,
+            animationDuration: 1000
+        });
+    }
+
+    function updateConfusionChart() {
+        if (!interactionChart) return;
+        
+        // 收集所有时间点（包括困惑和弹幕）
+        const allTimePoints = new Set();
+        
+        // 添加困惑时间点
+        confusionPoints.forEach(p => allTimePoints.add(p.timeStr));
+        
+        // 添加弹幕时间点
+        danmakuHistory.forEach(msg => {
+            const msgTime = new Date(msg.time);
+            const timeStr = `${msgTime.getHours().toString().padStart(2, '0')}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+            allTimePoints.add(timeStr);
+        });
+        
+        // 排序时间点
+        const timeLabels = Array.from(allTimePoints).sort();
+        
+        // 准备困惑数据
+        const confusionData = timeLabels.map(time => {
+            const point = confusionPoints.find(p => p.timeStr === time);
+            return point ? point.count : 0;
+        });
+        
+        // 准备弹幕数据
+        const danmakuData = timeLabels.map(time => {
+            return danmakuHistory.filter(msg => {
+                const msgTime = new Date(msg.time);
+                const msgTimeStr = `${msgTime.getHours().toString().padStart(2, '0')}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+                return msgTimeStr === time;
+            }).length;
+        });
+        
+        interactionChart.setOption({
+            xAxis: {
+                data: timeLabels
+            },
+            series: [
+                {
+                    data: confusionData
+                },
+                {
+                    data: danmakuData
+                }
+            ]
+        });
+    }
+
     function connectToClassroom(classroomCode) {
-        if(stompClient && stompClient.connected) stompClient.disconnect();
+        if (stompClient && stompClient.connected) {
+            stompClient.disconnect();
+        }
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame){
-            statusBadge.innerText='✅ 已连接'; statusBadge.style.background='#27ae60';
-            stompClient.subscribe('/topic/classroom/'+classroomCode, function(message){
+        stompClient.connect({}, function (frame) {
+            console.log('Connected');
+            statusBadge.innerText = '✅ 已连接';
+            statusBadge.style.background = 'var(--success-color)';
+            stompClient.subscribe('/topic/classroom/' + classroomCode, function (message) {
                 const data = JSON.parse(message.body);
-                if(data.type===1) addConfusionPoint(data.timestamp, data.userId, data.content);
-                else if(data.type===2) addDanmaku(data.content, data.timestamp, data.userId);
+                if (data.type === 1) {
+                    addConfusionPoint(data.timestamp, data.userId, data.content);
+                } else if (data.type === 2) {
+                    addDanmaku(data.content, data.timestamp, data.userId);
+                }
             });
-        }, function(error){ console.error(error); statusBadge.innerText='❌ 连接失败'; statusBadge.style.background='#e74c3c'; });
+        }, function (error) {
+            console.error(error);
+            statusBadge.innerText = '❌ 连接失败';
+            statusBadge.style.background = 'var(--danger-color)';
+        });
     }
+
     async function createClassroom() {
-        try{
-            const res = await fetch('/api/classroom/create?teacherId=1&title='+encodeURIComponent('课堂_'+new Date().toLocaleTimeString()), { method:'POST' });
+        try {
+            statusBadge.innerText = '<div class="loading"></div> 创建中...';
+            statusBadge.style.background = 'var(--warning-color)';
+            const res = await fetch('/api/classroom/create?teacherId=1&title=' + encodeURIComponent('课堂_' + new Date().toLocaleTimeString()), { method: 'POST' });
             const result = await res.json();
-            if(result.code===200){
+            if (result.code === 200) {
                 const code = result.data.code;
                 currentClassroomCode = code;
                 classroomPanel.innerHTML = `<div class="classroom-card"><span>🏫 教室码</span><span class="classroom-code">${code}</span><button class="copy-btn" onclick="window.copyClassroomCode()">📋 复制</button></div>`;
-                statusBadge.innerText='🔄 连接中...'; statusBadge.style.background='#f39c12';
+                statusBadge.innerText = '<div class="loading"></div> 连接中...';
+                statusBadge.style.background = 'var(--warning-color)';
                 resetData();
                 connectToClassroom(code);
-            } else alert('创建课堂失败：'+ (result.message||'未知错误'));
-        } catch(err){ alert('网络错误，无法创建课堂'); }
+            } else {
+                statusBadge.innerText = '❌ 创建失败';
+                statusBadge.style.background = 'var(--danger-color)';
+                alert('创建课堂失败：' + (result.message || '未知错误'));
+            }
+        } catch (err) {
+            statusBadge.innerText = '❌ 网络错误';
+            statusBadge.style.background = 'var(--danger-color)';
+            alert('网络错误，无法创建课堂');
+        }
     }
-    window.copyClassroomCode = function() {
-        if(currentClassroomCode){
-            if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(currentClassroomCode).then(()=>alert('教室码已复制：'+currentClassroomCode)).catch(()=>fallbackCopy(currentClassroomCode));
-            } else fallbackCopy(currentClassroomCode);
+
+    window.copyClassroomCode = function () {
+        if (currentClassroomCode) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentClassroomCode).then(() => {
+                    // 显示复制成功提示
+                    const copyBtn = document.querySelector('.copy-btn');
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '✅ 已复制';
+                    copyBtn.style.background = 'var(--success-color)';
+                    copyBtn.style.color = 'white';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '📋 复制';
+                        copyBtn.style.background = 'white';
+                        copyBtn.style.color = 'var(--primary-color)';
+                    }, 2000);
+                }).catch(() => fallbackCopy(currentClassroomCode));
+            } else {
+                fallbackCopy(currentClassroomCode);
+            }
         }
     };
-    function fallbackCopy(text){
-        const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('教室码已复制：'+text);
+
+    function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const copyBtn = document.querySelector('.copy-btn');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✅ 已复制';
+        copyBtn.style.background = 'var(--success-color)';
+        copyBtn.style.color = 'white';
+        setTimeout(() => {
+            copyBtn.innerHTML = '📋 复制';
+            copyBtn.style.background = 'white';
+            copyBtn.style.color = 'var(--primary-color)';
+        }, 2000);
     }
-    window.onload = () => { initChart(); classroomPanel.innerHTML = `<button class="create-btn" id="createBtn">➕ 创建新课堂</button>`; document.getElementById('createBtn').addEventListener('click', createClassroom); };
+
+    window.onload = () => {
+        initChart();
+        initInteractionChart();
+        classroomPanel.innerHTML = `<button class="create-btn" id="createBtn">➕ 创建新课堂</button>`;
+        document.getElementById('createBtn').addEventListener('click', createClassroom);
+        
+        // 添加分割线功能 - 使用once确保只绑定一次
+        const addDividerBtn = document.getElementById('addDividerBtn');
+        if (addDividerBtn) {
+            // 先移除可能存在的事件监听器
+            addDividerBtn.replaceWith(addDividerBtn.cloneNode(true));
+            // 重新获取按钮并绑定事件
+            const newAddDividerBtn = document.getElementById('addDividerBtn');
+            newAddDividerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                addDivider();
+            });
+        }
+        
+        // 添加悬浮跳转按钮
+        const floatingBtn = document.createElement('div');
+        floatingBtn.className = 'floating-jump-btn';
+        floatingBtn.innerHTML = '⬆';
+        floatingBtn.title = '跳转到最新消息';
+        document.body.appendChild(floatingBtn);
+        
+        floatingBtn.addEventListener('click', function() {
+            danmakuListDiv.scrollTop = 0;
+        });
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', function () {
+            if (chart) {
+                chart.resize();
+            }
+            if (interactionChart) {
+                interactionChart.resize();
+            }
+        });
+    };
 </script>
 </body>
 </html>
