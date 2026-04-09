@@ -2,385 +2,154 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>课堂反馈教师端 | 实时热力图与弹幕</title>
-    <!-- ECharts CDN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>教师端 | 课堂反馈看板</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <!-- SockJS & STOMP -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-        .connection-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        .connection-panel .field {
-            flex: 1;
-            min-width: 200px;
-        }
-        .connection-panel label {
-            display: block;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .connection-panel input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: 0.2s;
-        }
-        .connection-panel input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .connection-panel button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .connection-panel button:hover {
-            background: #5a67d8;
-        }
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 20px;
-        }
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .chart-card h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            padding-left: 12px;
-        }
-        #heatmap {
-            width: 100%;
-            height: 400px;
-        }
-        .danmaku-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        .danmaku-card h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
-            border-left: 4px solid #f093fb;
-            padding-left: 12px;
-        }
-        .danmaku-list {
-            flex: 1;
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 10px;
-            background: #fafafa;
-        }
-        .danmaku-item {
-            background: white;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            border-radius: 20px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            font-size: 14px;
-            border-left: 3px solid #f093fb;
-        }
-        .danmaku-item .time {
-            color: #999;
-            font-size: 12px;
-            margin-right: 10px;
-        }
-        .danmaku-item .content {
-            color: #333;
-        }
-        .confusion-count {
-            background: #fff3e0;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .confusion-count span:first-child {
-            font-size: 16px;
-            color: #e67e22;
-        }
-        .confusion-count span:last-child {
-            font-size: 32px;
-            font-weight: bold;
-            color: #e67e22;
-        }
-        .status-badge {
-            display: inline-block;
-            background: #27ae60;
-            color: white;
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #999;
-            font-size: 12px;
-        }
+        /* 样式不变，省略... 请复制之前的完整样式 */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI','Microsoft YaHei',sans-serif; background:#f0f2f5; padding:20px; }
+        .container { max-width:1400px; margin:0 auto; }
+        .header { background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:white; padding:20px 30px; border-radius:24px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; }
+        .header h1 { font-size:24px; display:flex; align-items:center; gap:12px; }
+        .classroom-card { background:rgba(255,255,255,0.15); padding:10px 20px; border-radius:60px; display:flex; align-items:center; gap:15px; backdrop-filter:blur(4px); }
+        .classroom-code { font-size:28px; font-weight:bold; letter-spacing:4px; font-family:monospace; }
+        .copy-btn { background:white; border:none; padding:6px 14px; border-radius:30px; color:#1e3c72; font-weight:bold; cursor:pointer; transition:0.2s; }
+        .copy-btn:hover { background:#e0e7ff; }
+        .create-btn { background:#ffc107; color:#1e3c72; border:none; padding:12px 28px; border-radius:40px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.2s; }
+        .create-btn:hover { background:#ffcd38; }
+        .status { background:#27ae60; padding:6px 16px; border-radius:40px; font-size:14px; font-weight:normal; }
+        .dashboard { display:grid; grid-template-columns:1fr 340px; gap:20px; }
+        .chart-card { background:white; border-radius:24px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+        .chart-card h3 { font-size:18px; color:#333; margin-bottom:16px; border-left:4px solid #2a5298; padding-left:12px; }
+        #heatmap { width:100%; height:400px; }
+        .stats { display:flex; justify-content:space-between; margin-top:20px; background:#f8f9fc; padding:16px; border-radius:20px; }
+        .stats-item { text-align:center; }
+        .stats-number { font-size:32px; font-weight:bold; color:#2a5298; }
+        .danmaku-card { background:white; border-radius:24px; padding:20px; display:flex; flex-direction:column; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+        .danmaku-list { flex:1; height:500px; overflow-y:auto; border:1px solid #eee; border-radius:20px; padding:12px; background:#fafbfd; }
+        .danmaku-item { background:white; padding:12px 16px; margin-bottom:10px; border-radius:30px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border-left:4px solid #2a5298; }
+        .danmaku-item.confusion { border-left-color:#ff6b6b; background:#fff5f5; }
+        .danmaku-time { font-size:11px; color:#999; margin-right:12px; }
+        .danmaku-content { font-size:14px; color:#333; }
+        .footer { text-align:center; margin-top:20px; color:#aaa; font-size:12px; }
+        @media (max-width:768px){ .dashboard{grid-template-columns:1fr;} .header{flex-direction:column; align-items:flex-start;} }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 课堂反馈智慧看板 <span id="statusBadge" class="status-badge">未连接</span></h1>
-        <p>实时困惑热力图 + 弹幕互动 | 数据驱动教学</p>
+        <h1>📊 课堂反馈智慧看板</h1>
+        <div id="classroomPanel"></div>
+        <div id="statusBadge" class="status">⚪ 未连接</div>
     </div>
-
-    <div class="connection-panel">
-        <div class="field">
-            <label>🏫 教室码</label>
-            <input type="text" id="classroomCode" placeholder="请输入6位教室码" autocomplete="off">
-        </div>
-        <div class="field">
-            <label>👨‍🏫 教师ID（可选）</label>
-            <input type="text" id="teacherId" placeholder="默认为1" value="1">
-        </div>
-        <button id="connectBtn">🔌 连接课堂</button>
-    </div>
-
     <div class="dashboard">
         <div class="chart-card">
-            <h3>🔥 困惑热力图（随时间分布）</h3>
+            <h3>🔥 困惑热力图（按分钟聚合）</h3>
             <div id="heatmap"></div>
-            <div class="confusion-count">
-                <span>📈 累计困惑次数</span>
-                <span id="totalConfusion">0</span>
+            <div class="stats">
+                <div class="stats-item"><div class="stats-number" id="totalConfusion">0</div><div>累计困惑</div></div>
+                <div class="stats-item"><div class="stats-number" id="activeStudents">0</div><div>参与学生</div></div>
             </div>
         </div>
         <div class="danmaku-card">
-            <h3>💬 实时弹幕</h3>
-            <div id="danmakuList" class="danmaku-list">
-                <div style="color: #aaa; text-align: center; padding: 20px;">暂无弹幕，等待学生发言...</div>
-            </div>
+            <h3>💬 实时消息（困惑+弹幕）</h3>
+            <div id="danmakuList" class="danmaku-list"><div style="color:#aaa; text-align:center; padding:20px;">暂无消息，等待学生互动...</div></div>
         </div>
     </div>
-    <div class="footer">
-        教师端 | 数据实时同步 | 困惑热点动态刷新
-    </div>
+    <div class="footer">教师端 | 鼠标悬停图表查看详细时间 | 困惑消息显示为红色边框</div>
 </div>
-
 <script>
-    // ---------- DOM 元素 ----------
-    const classroomCodeInput = document.getElementById('classroomCode');
-    const connectBtn = document.getElementById('connectBtn');
+    const classroomPanel = document.getElementById('classroomPanel');
     const statusBadge = document.getElementById('statusBadge');
     const totalConfusionSpan = document.getElementById('totalConfusion');
+    const activeStudentsSpan = document.getElementById('activeStudents');
     const danmakuListDiv = document.getElementById('danmakuList');
+    let chart = null, stompClient = null, currentClassroomCode = null;
+    let confusionMap = new Map(), confusionPoints = [], totalConfusionCount = 0, danmakuHistory = [], studentSet = new Set();
 
-    // ---------- 图表初始化 ----------
-    let chart = null;
-    let stompClient = null;
-    let currentClassroomCode = null;
+    function getMinuteKey(timestamp) { const d = new Date(timestamp); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
+    function updateChart() { if(!chart) return; chart.setOption({ xAxis:{ data: confusionPoints.map(p=>p.timeStr) }, series:[{ data: confusionPoints.map(p=>p.count) }] }); }
 
-    // 数据存储
-    let confusionPoints = [];   // 存储 { timeStr, count } 用于图表
-    let totalConfusionCount = 0;
-    let danmakuHistory = [];    // 最多存储30条弹幕
+    // 修改后的 addConfusionPoint：只有有描述时才显示在消息列表
+    function addConfusionPoint(timestamp, userId, content) {
+        const minuteKey = getMinuteKey(timestamp);
+        if(confusionMap.has(minuteKey)) confusionMap.get(minuteKey).count++;
+        else confusionMap.set(minuteKey, { timeStr: minuteKey, count:1 });
+        confusionPoints = Array.from(confusionMap.values()).sort((a,b)=>a.timeStr.localeCompare(b.timeStr));
+        totalConfusionCount++; totalConfusionSpan.innerText = totalConfusionCount;
+        if(userId) studentSet.add(userId);
+        activeStudentsSpan.innerText = studentSet.size;
+        updateChart();
 
-    // 初始化 ECharts
-    function initChart() {
-        const dom = document.getElementById('heatmap');
-        chart = echarts.init(dom);
-        const option = {
-            title: { show: false },
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-            xAxis: {
-                type: 'category',
-                name: '时间',
-                data: [],
-                axisLabel: { rotate: 30, interval: 0 }
-            },
-            yAxis: {
-                type: 'value',
-                name: '困惑次数'
-            },
-            series: [{
-                name: '困惑次数',
-                type: 'line',
-                smooth: true,
-                symbol: 'circle',
-                symbolSize: 8,
-                itemStyle: { color: '#e67e22', borderColor: '#fff', borderWidth: 2 },
-                areaStyle: { opacity: 0.3, color: '#f39c12' },
-                data: []
-            }],
-            grid: { containLabel: true, left: 50, right: 30, top: 30, bottom: 30 }
-        };
-        chart.setOption(option);
-    }
-
-    // 添加困惑数据点（时间戳）
-    function addConfusionPoint(timestamp) {
-        const date = new Date(timestamp);
-        const timeStr = `${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}:${date.getSeconds().toString().padStart(2,'0')}`;
-
-        // 检查最后一个点的时间是否相同（同一秒内多次困惑，累加）
-        if (confusionPoints.length > 0 && confusionPoints[confusionPoints.length-1].timeStr === timeStr) {
-            confusionPoints[confusionPoints.length-1].count++;
-        } else {
-            confusionPoints.push({ timeStr, count: 1 });
+        if (content && content.trim() !== '') {
+            addMessageToList(`🤔 困惑：${content}`, timestamp, userId, 'confusion');
         }
-
-        // 更新图表数据
-        const xAxisData = confusionPoints.map(p => p.timeStr);
-        const seriesData = confusionPoints.map(p => p.count);
-        chart.setOption({
-            xAxis: { data: xAxisData },
-            series: [{ data: seriesData }]
-        });
-
-        // 更新总计数
-        totalConfusionCount++;
-        totalConfusionSpan.innerText = totalConfusionCount;
     }
 
-    // 添加弹幕
-    function addDanmaku(content, timestamp) {
+    function addDanmaku(content, timestamp, userId) {
+        addMessageToList(`💬 ${content}`, timestamp, userId, 'danmaku');
+        if(userId) studentSet.add(userId);
+        activeStudentsSpan.innerText = studentSet.size;
+    }
+    function addMessageToList(displayContent, timestamp, userId, type) {
         const time = new Date(timestamp).toLocaleTimeString();
-        const item = { time, content };
-        danmakuHistory.unshift(item);  // 最新在上
-        if (danmakuHistory.length > 30) danmakuHistory.pop();
-
-        // 刷新弹幕区域
-        if (danmakuHistory.length === 0) {
-            danmakuListDiv.innerHTML = '<div style="color: #aaa; text-align: center; padding: 20px;">暂无弹幕，等待学生发言...</div>';
-        } else {
-            let html = '';
-            danmakuHistory.forEach(d => {
-                html += `<div class="danmaku-item"><span class="time">${d.time}</span><span class="content">${escapeHtml(d.content)}</span></div>`;
-            });
-            danmakuListDiv.innerHTML = html;
-        }
+        danmakuHistory.unshift({ time, content: displayContent, type });
+        if(danmakuHistory.length > 30) danmakuHistory.pop();
+        renderMessageList();
     }
-
-    // 简单的防XSS
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
-        });
+    function renderMessageList() {
+        if(danmakuHistory.length===0) { danmakuListDiv.innerHTML='<div style="color:#aaa; text-align:center; padding:20px;">暂无消息，等待学生互动...</div>'; return; }
+        let html = '';
+        danmakuHistory.forEach(m=>{ html+=`<div class="danmaku-item ${m.type==='confusion'?'confusion':''}"><span class="danmaku-time">${m.time}</span><span class="danmaku-content">${escapeHtml(m.content)}</span></div>`; });
+        danmakuListDiv.innerHTML = html;
     }
-
-    // WebSocket 连接
-    function connectWebSocket(classroomCode) {
-        if (stompClient && stompClient.connected) {
-            stompClient.disconnect();
-        }
+    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
+    function resetData() { confusionMap.clear(); confusionPoints=[]; totalConfusionCount=0; studentSet.clear(); danmakuHistory=[]; totalConfusionSpan.innerText='0'; activeStudentsSpan.innerText='0'; renderMessageList(); if(chart) chart.setOption({ xAxis:{ data:[] }, series:[{ data:[] }] }); }
+    function initChart() {
+        chart = echarts.init(document.getElementById('heatmap'));
+        chart.setOption({ tooltip:{ trigger:'axis', axisPointer:{ type:'shadow' }, formatter:params=>params?`时间: ${params[0].axisValue}<br/>困惑次数: ${params[0].value}`:'' }, xAxis:{ type:'category', name:'时间 (分钟)', data:[], axisLabel:{ rotate:30, interval:0 } }, yAxis:{ type:'value', name:'困惑次数' }, series:[{ name:'困惑次数', type:'line', smooth:true, symbol:'circle', symbolSize:8, itemStyle:{ color:'#e67e22', borderColor:'#fff', borderWidth:2 }, areaStyle:{ opacity:0.3, color:'#f39c12' }, data:[] }], grid:{ containLabel:true, left:50, right:30, top:30, bottom:30 } });
+    }
+    function connectToClassroom(classroomCode) {
+        if(stompClient && stompClient.connected) stompClient.disconnect();
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame) {
-            console.log('Connected: ' + frame);
-            statusBadge.innerText = '已连接';
-            statusBadge.style.backgroundColor = '#27ae60';
-
-            // 订阅该教室的主题
-            stompClient.subscribe('/topic/classroom/' + classroomCode, function(message) {
+        stompClient.connect({}, function(frame){
+            statusBadge.innerText='✅ 已连接'; statusBadge.style.background='#27ae60';
+            stompClient.subscribe('/topic/classroom/'+classroomCode, function(message){
                 const data = JSON.parse(message.body);
-                const type = data.type;
-                const content = data.content || '';
-                const timestamp = data.timestamp;
-
-                if (type === 1) { // 困惑
-                    addConfusionPoint(timestamp);
-                } else if (type === 2) { // 弹幕
-                    addDanmaku(content, timestamp);
-                }
+                if(data.type===1) addConfusionPoint(data.timestamp, data.userId, data.content);
+                else if(data.type===2) addDanmaku(data.content, data.timestamp, data.userId);
             });
-        }, function(error) {
-            console.error('WebSocket连接失败', error);
-            statusBadge.innerText = '连接失败';
-            statusBadge.style.backgroundColor = '#e74c3c';
-        });
+        }, function(error){ console.error(error); statusBadge.innerText='❌ 连接失败'; statusBadge.style.background='#e74c3c'; });
     }
-
-    // 连接按钮事件
-    connectBtn.addEventListener('click', function() {
-        const code = classroomCodeInput.value.trim();
-        if (!code) {
-            alert('请输入教室码');
-            return;
+    async function createClassroom() {
+        try{
+            const res = await fetch('/api/classroom/create?teacherId=1&title='+encodeURIComponent('课堂_'+new Date().toLocaleTimeString()), { method:'POST' });
+            const result = await res.json();
+            if(result.code===200){
+                const code = result.data.code;
+                currentClassroomCode = code;
+                classroomPanel.innerHTML = `<div class="classroom-card"><span>🏫 教室码</span><span class="classroom-code">${code}</span><button class="copy-btn" onclick="window.copyClassroomCode()">📋 复制</button></div>`;
+                statusBadge.innerText='🔄 连接中...'; statusBadge.style.background='#f39c12';
+                resetData();
+                connectToClassroom(code);
+            } else alert('创建课堂失败：'+ (result.message||'未知错误'));
+        } catch(err){ alert('网络错误，无法创建课堂'); }
+    }
+    window.copyClassroomCode = function() {
+        if(currentClassroomCode){
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(currentClassroomCode).then(()=>alert('教室码已复制：'+currentClassroomCode)).catch(()=>fallbackCopy(currentClassroomCode));
+            } else fallbackCopy(currentClassroomCode);
         }
-        currentClassroomCode = code;
-        // 重置数据
-        confusionPoints = [];
-        totalConfusionCount = 0;
-        totalConfusionSpan.innerText = '0';
-        danmakuHistory = [];
-        danmakuListDiv.innerHTML = '<div style="color: #aaa; text-align: center; padding: 20px;">暂无弹幕，等待学生发言...</div>';
-        if (chart) {
-            chart.setOption({ xAxis: { data: [] }, series: [{ data: [] }] });
-        }
-        // 连接 WebSocket
-        connectWebSocket(code);
-    });
-
-    // 页面加载时初始化图表
-    initChart();
+    };
+    function fallbackCopy(text){
+        const ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('教室码已复制：'+text);
+    }
+    window.onload = () => { initChart(); classroomPanel.innerHTML = `<button class="create-btn" id="createBtn">➕ 创建新课堂</button>`; document.getElementById('createBtn').addEventListener('click', createClassroom); };
 </script>
 </body>
 </html>
